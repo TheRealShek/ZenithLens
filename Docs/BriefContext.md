@@ -74,6 +74,7 @@ cd frontend && bun run build && cd .. && go build -o local-gallery .
 - Native execution is the default deployment model
 - Add Folder uses `Choose Folder` first, with manual path entry as fallback
 - Picker priority is `zenity`, then `kdialog`
+- GitHub Actions builds Linux release archives; AppImage metadata is scaffolded
 
 ## Key Files to Read First
 1. `Docs/EndGoal.md` — full specification

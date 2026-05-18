@@ -26,7 +26,8 @@ manually.
 
 ## Install
 
-Download the latest Linux release package when available, extract it, and run:
+Download the latest Linux release package from the GitHub Releases page, extract
+it, and run:
 
 ```bash
 ./zenithlens --open
@@ -113,3 +114,6 @@ Developer setup, architecture, and testing details are documented in:
 - `Docs/EndGoal.md`
 - `Docs/BriefContext.md`
 - `Docs/Testing.md`
+
+Release packages are built automatically by GitHub Actions when a GitHub Release
+is published. The workflow also supports manual runs for verification.

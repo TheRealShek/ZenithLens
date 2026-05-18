@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=ZenithLens
+Comment=Browse local media folders
+Exec=zenithlens --open
+Icon=zenithlens
+Terminal=false
+Categories=Graphics;Viewer;

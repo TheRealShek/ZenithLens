@@ -15,6 +15,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/therealshek/local-gallery/internal/config"
 	"github.com/therealshek/local-gallery/internal/media"
+	"github.com/therealshek/local-gallery/internal/picker"
 	"github.com/therealshek/local-gallery/internal/scanner"
 	"github.com/therealshek/local-gallery/internal/thumb"
 )
@@ -72,11 +73,14 @@ func (h *Handler) StartScan(folderID, folderPath string) {
 		files, err := scanner.ScanFolder(ctx, folderID, folderPath)
 
 		h.CacheMutex.Lock()
-		defer h.CacheMutex.Unlock()
-
 		if ctx.Err() == nil && err == nil {
 			h.MediaCache[folderID] = files
+		}
+		delete(h.ScanningFolders, folderID)
+		delete(h.ScanCancels, folderID)
+		h.CacheMutex.Unlock()
 
+		if ctx.Err() == nil && err == nil {
 			h.ConfigMutex.Lock()
 			if f := h.Config.FindFolder(folderID); f != nil {
 				f.MediaCount = len(files)
@@ -85,9 +89,6 @@ func (h *Handler) StartScan(folderID, folderPath string) {
 			}
 			h.ConfigMutex.Unlock()
 		}
-
-		h.ScanningFolders[folderID] = false
-		delete(h.ScanCancels, folderID)
 	}()
 }
 
@@ -246,6 +247,24 @@ func (h *Handler) AddFolder(w http.ResponseWriter, r *http.Request) {
 		Path:    folder.Path,
 		AddedAt: folder.AddedAt.Format(time.RFC3339),
 	})
+}
+
+// PickFolder handles POST /api/folders/pick.
+func (h *Handler) PickFolder(w http.ResponseWriter, r *http.Request) {
+	path, err := picker.PickFolder()
+	if err != nil {
+		switch err {
+		case picker.ErrUnavailable:
+			writeError(w, http.StatusServiceUnavailable, "no supported folder picker available")
+		case picker.ErrCancelled:
+			writeError(w, http.StatusConflict, "folder selection cancelled")
+		default:
+			writeError(w, http.StatusInternalServerError, "folder selection failed")
+		}
+		return
+	}
+
+	writeJSON(w, http.StatusOK, PickFolderDTO{Path: path})
 }
 
 // DeleteFolder handles DELETE /api/folders/:id
@@ -563,6 +582,14 @@ func (h *Handler) ServeThumb(w http.ResponseWriter, r *http.Request) {
 
 // RegisterRoutes sets up all routes on the given mux.
 func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
+	mux.HandleFunc("/api/folders/pick", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+			return
+		}
+		h.PickFolder(w, r)
+	})
+
 	mux.HandleFunc("/api/folders", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:

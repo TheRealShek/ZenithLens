@@ -1,9 +1,14 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import './Toolbar.css';
 
-export default function Toolbar({ onSearch, total, page, limit, loading }) {
-  const [query, setQuery] = useState('');
+export default function Toolbar({ onSearch, total, page, limit, loading, searchQuery }) {
+  const [query, setQuery] = useState(searchQuery || '');
   const timerRef = useRef(null);
+
+  // Sync local input with external route state (URL hydration, back/forward, sidebar nav).
+  useEffect(() => {
+    setQuery(searchQuery || '');
+  }, [searchQuery]);
 
   function handleInput(e) {
     const val = e.target.value;

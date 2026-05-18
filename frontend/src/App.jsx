@@ -28,7 +28,7 @@ export default function App() {
         onAddFolder={() => setModalOpen(true)}
       />
       <main className="main-content">
-        <Toolbar onSearch={search} total={total} page={page} limit={LIMIT} loading={loading} />
+        <Toolbar onSearch={search} total={total} page={page} limit={LIMIT} loading={loading} searchQuery={searchQuery} />
         <div className="grid-container">
           <Grid items={items} favorites={favorites} onItemClick={lightbox.open} />
         </div>

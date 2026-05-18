@@ -36,6 +36,26 @@
 
 .modal input:focus { border-color: var(--accent); }
 
+.modal-picker {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface2);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.modal-picker:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.modal-picker:disabled {
+  color: var(--text2);
+  cursor: wait;
+}
+
 .modal-error {
   color: var(--danger);
   font-size: 0.85rem;

@@ -68,7 +68,7 @@ func main() {
 		os.Exit(0)
 	}()
 
-	addr := ":8080"
+	addr := ":38471"
 	url := "http://localhost" + addr
 	fmt.Printf("ZenithLens running at %s\n", url)
 

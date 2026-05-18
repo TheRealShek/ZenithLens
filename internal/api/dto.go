@@ -11,11 +11,16 @@ type FolderDTO struct {
 	Scanning    bool   `json:"scanning"`
 }
 
+// PickFolderDTO is returned after the user selects a folder in the native picker.
+type PickFolderDTO struct {
+	Path string `json:"path"`
+}
+
 // MediaFileDTO is the JSON representation of a single media file.
 type MediaFileDTO struct {
 	Path     string `json:"path"`
 	Name     string `json:"name"`
-	Type     string `json:"type"`     // "image" or "video"
+	Type     string `json:"type"` // "image" or "video"
 	MimeType string `json:"mimeType"`
 }
 

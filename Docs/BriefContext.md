@@ -1,7 +1,7 @@
 # ZenithLens - Brief Context
 
 ## What Is This
-Local-only media gallery. Single Go binary serves a React frontend. Users register filesystem folders, the app scans them and presents a browsable grid with thumbnails, lightbox, search, favorites, and pagination. No cloud, no auth, no database.
+Linux-only local media gallery. Single Go binary serves a React frontend on localhost. Users register host filesystem folders, the app scans them and presents a browsable grid with thumbnails, lightbox, search, favorites, and pagination. No cloud, no auth, no database.
 
 ## Tech Stack
 - **Backend:** Go (stdlib net/http), single binary
@@ -10,6 +10,7 @@ Local-only media gallery. Single Go binary serves a React frontend. Users regist
 - **Thumbnails:** `disintegration/imaging` (images), `ffmpeg` CLI (videos, optional)
 - **Config:** JSON at `~/.local-gallery/config.json`
 - **Thumb Cache:** Disk at `~/.local-gallery/thumbs/`
+- **Platform:** Native Linux host process with desktop folder picker support
 
 ## Backend Structure
 | Package | File | Responsibility |
@@ -17,6 +18,7 @@ Local-only media gallery. Single Go binary serves a React frontend. Users regist
 | `internal/media` | `types.go` | Extensions, MIME, MediaFile struct, IsMedia |
 | `internal/config` | `config.go` | Load/Save config (atomic), folder/favorite helpers |
 | `internal/scanner` | `scanner.go` | Context-aware WalkDir, symlink/hidden skip |
+| `internal/picker` | `picker.go` | Linux folder picker: `zenity`, then `kdialog` |
 | `internal/api` | `dto.go` | FolderDTO, MediaFileDTO, PageResponseDTO |
 | `internal/api` | `handlers.go` | All endpoints, path validation, scan lifecycle, routing |
 | `internal/thumb` | `thumb.go` | singleflight, imaging resize, ffmpeg timeout, temp cleanup |
@@ -35,6 +37,7 @@ Local-only media gallery. Single Go binary serves a React frontend. Users regist
 
 ## API Endpoints
 - `GET/POST /api/folders` — list/add folders
+- `POST /api/folders/pick` — choose a host folder via `zenity`, then `kdialog`, else manual fallback
 - `DELETE /api/folders/:id` — remove folder
 - `POST /api/folders/:id/rescan` — trigger rescan
 - `GET /api/home` — all media, paginated, shuffled
@@ -51,13 +54,14 @@ Local-only media gallery. Single Go binary serves a React frontend. Users regist
 - Path security: Clean -> EvalSymlinks -> filepath.Rel containment check.
 - Thumbnail concurrency: singleflight prevents duplicate generation.
 - Scan goroutines: context-cancellable, 409 on overlapping rescans.
+- Native Linux deployment keeps real host paths valid without container path translation.
 - No emojis anywhere in the codebase.
 
 ## Dev Workflow
 ```bash
-# Terminal 1: Go backend on :8080
+# Terminal 1: Go backend on :38471
 go run .
-# Terminal 2: Vite dev on :5173 (proxies /api, /media to :8080)
+# Terminal 2: Vite dev on :5173 (proxies /api, /media to :38471)
 cd frontend && bun run dev
 ```
 
@@ -66,7 +70,13 @@ cd frontend && bun run dev
 cd frontend && bun run build && cd .. && go build -o local-gallery .
 ```
 
+## Linux UX Direction
+- Native execution is the default deployment model
+- Add Folder uses `Choose Folder` first, with manual path entry as fallback
+- Picker priority is `zenity`, then `kdialog`
+
 ## Key Files to Read First
 1. `Docs/EndGoal.md` — full specification
 2. `Docs/BriefContext.md` — this file
-3. `AGENTS.md` — AI agent rules
+3. `Docs/Testing.md` — complete verification workflow
+4. `AGENTS.md` — AI agent rules

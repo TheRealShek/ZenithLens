@@ -25,6 +25,14 @@ export function useMediaFetch(route, page, folderId, searchQuery, seed, limit) {
     let cancelled = false;
 
     async function load() {
+      // Don't fetch search results without a real query — avoids sending
+      // the literal string "null" to the backend.
+      if (route === 'search' && !searchQuery) {
+        setItems([]);
+        setTotal(0);
+        setLoading(false);
+        return;
+      }
       setLoading(true);
       const url = buildEndpoint(route, page, folderId, searchQuery, seed, limit);
       const { data } = await fetchAPI(url);

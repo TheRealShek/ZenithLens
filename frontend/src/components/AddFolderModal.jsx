@@ -7,7 +7,22 @@ export default function AddFolderModal({ onClose }) {
   const [path, setPath] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
+  const [picking, setPicking] = useState(false);
   const { loadFolders, setScanning } = useContext(AppContext);
+
+  async function handleChooseFolder() {
+    setError('');
+    setPicking(true);
+    const { data, error: apiErr } = await fetchAPI('/api/folders/pick', {
+      method: 'POST',
+    });
+    setPicking(false);
+    if (apiErr) {
+      setError(apiErr);
+      return;
+    }
+    if (data?.path) setPath(data.path);
+  }
 
   async function handleSubmit() {
     if (!path.trim()) return;
@@ -33,6 +48,13 @@ export default function AddFolderModal({ onClose }) {
           onChange={e => setPath(e.target.value)}
           autoFocus
         />
+        <button
+          className="modal-picker"
+          onClick={handleChooseFolder}
+          disabled={picking}
+        >
+          {picking ? 'Opening Folder Picker...' : 'Choose Folder'}
+        </button>
         <input
           placeholder="Display name (optional)"
           value={name}

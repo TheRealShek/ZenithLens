@@ -6,7 +6,7 @@
 
 ## Project Overview
 
-Local-only web application that turns arbitrary filesystem folders into a browsable media gallery. Runs as a single Go binary on localhost. No cloud, no auth, no database. Fast, dark, keyboard-friendly.
+Linux-only local application that turns arbitrary host filesystem folders into a browsable media gallery. Runs as a single Go binary on localhost. No cloud, no auth, no database. Fast, dark, keyboard-friendly.
 
 **Primary use case:** User has photos and videos scattered across many local directories. They register those directories once. The app gives them a unified, visually rich browser interface to explore them all.
 
@@ -23,6 +23,7 @@ Local-only web application that turns arbitrary filesystem folders into a browsa
 | Video thumbs   | `ffmpeg` CLI if available                        | Better UX than browser frame extraction                         |
 | Config         | JSON file at `~/.local-gallery/config.json`      | No database. Human-readable.                                    |
 | Thumb cache    | `~/.local-gallery/thumbs/`                       | Avoids regenerating. Survives restarts.                         |
+| Platform       | Native Linux host process                        | Direct filesystem access and desktop folder picker support      |
 
 ---
 
@@ -193,19 +194,45 @@ Frontend must treat totals/pages as unstable while scanning.
 Base:
 
 ```text
-http://localhost:8080
+http://localhost:38471
 ```
 
 ---
 
 ## Folder Endpoints
 
-| Method | Path                      |
-| ------ | ------------------------- |
-| GET    | `/api/folders`            |
-| POST   | `/api/folders`            |
-| DELETE | `/api/folders/:id`        |
-| POST   | `/api/folders/:id/rescan` |
+| Method | Path                        |
+| ------ | --------------------------- |
+| GET    | `/api/folders`              |
+| POST   | `/api/folders`              |
+| POST   | `/api/folders/pick`         |
+| DELETE | `/api/folders/:id`          |
+| POST   | `/api/folders/:id/rescan`   |
+
+### Native Folder Picker
+
+`POST /api/folders/pick` opens a Linux desktop directory picker and returns:
+
+```json
+{
+  "path": "/home/user/Pictures"
+}
+```
+
+Picker priority:
+
+1. `zenity`
+2. `kdialog`
+3. manual path input fallback in the frontend when neither command is available or the picker is cancelled
+
+Backend rules:
+
+* use `exec.LookPath` to detect picker availability
+* prefer `zenity --file-selection --directory`
+* fall back to `kdialog --getexistingdirectory`
+* trim trailing newlines from command output only; preserve valid spaces inside paths
+* return a non-2xx response with a clear error when no picker is available
+* do not auto-register the selected folder; selection and registration remain separate operations
 
 ---
 
@@ -353,7 +380,7 @@ If ffmpeg unavailable:
 
 React + Vite frontend built to static assets and embedded into the Go binary.
 
-Development uses Vite dev server on `:5173` with proxy to Go backend on `:8080`.
+Development uses Vite dev server on `:5173` with proxy to Go backend on `:38471`.
 Production build outputs to `frontend/dist/`, which Go embeds and serves via `http.FileServer`.
 
 No SSR. No React Router (URL state managed via `pushState`/`popstate`). No Redux/Zustand/React Query.
@@ -366,6 +393,19 @@ State architecture:
 * `useLightbox` hook — lightbox open/close, index, keyboard shortcuts
 
 CSS: co-located `.css` files per component. Global variables in `App.css`.
+
+### Add Folder Flow
+
+`AddFolderModal` remains the folder-entry surface, but the primary action is desktop-oriented:
+
+1. User clicks `Choose Folder`.
+2. Frontend calls `POST /api/folders/pick`.
+3. If a picker returns a path, the modal places that absolute host path into the folder path field.
+4. User may optionally edit the display name.
+5. User confirms `Add`, which reuses existing `POST /api/folders`.
+6. If no picker exists or the user cancels it, the manual path field stays available as the fallback path.
+
+The chosen path is a real Linux host path because the Go backend runs directly on the host. No container translation, bind mount, or alternate in-app path is involved.
 
 ---
 
@@ -438,7 +478,7 @@ $ ./local-gallery
 → Load config
 → Create thumb cache dir
 → Start async folder scans
-→ Listen on :8080
+→ Listen on :38471
 → Print localhost URL
 ```
 
@@ -449,6 +489,33 @@ Optional:
 ```
 
 opens browser automatically.
+
+---
+
+## Linux Distribution
+
+Primary distribution strategy:
+
+1. build the React frontend with Bun
+2. embed `frontend/dist/` into the Go binary
+3. ship a versioned Linux release archive containing:
+   * `zenithlens` executable
+   * `README` / license
+   * optional `.desktop` launcher file and application icon
+
+Recommended release formats:
+
+* `.tar.gz` as the baseline portable artifact
+* AppImage as the preferred convenience package once release automation is in place
+
+System expectations:
+
+* `ffmpeg` remains optional for video thumbnails
+* `zenity` is the preferred folder-picker dependency
+* `kdialog` is the supported KDE fallback
+* manual path input keeps the app usable on minimal Linux installs
+
+Docker is not a primary deployment path. Native execution is the supported default because it gives the backend direct access to real host paths, lets the folder picker return immediately usable paths, and avoids teaching normal users about bind mounts or container-visible aliases.
 
 ---
 
@@ -489,11 +556,13 @@ require (
 2. config
 3. scanner
 4. thumbnails
-5. API handlers
-6. main wiring
-7. frontend scaffold (Vite + React + proxy)
-8. frontend components (sidebar, grid, pagination, lightbox)
-9. production build + Go embed integration
+5. native Linux folder picker service
+6. API handlers, including `/api/folders/pick`
+7. main wiring
+8. frontend scaffold (Vite + React + proxy)
+9. frontend components (sidebar, grid, pagination, lightbox, choose-folder flow)
+10. production build + Go embed integration
+11. Linux release packaging artifacts
 
 Build/test after every step.
 
@@ -514,6 +583,7 @@ Build/test after every step.
 
 * local-first
 * single binary deployment (frontend embedded)
+* native Linux host integration
 * desktop-focused
 * visually dense
 * deterministic pagination

@@ -1,3 +1,8 @@
+# Go
+/.gopath/
+/local-gallery
+
+# IDE
 /.idea
 .vscode
 node_modules/

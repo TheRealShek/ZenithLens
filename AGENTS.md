@@ -39,3 +39,10 @@ Example invocation:
 - Add CI job names that map to the agent (e.g., `ci/build`, `ci/test`).
 
 Usage: pick an agent for the targeted task and follow the Inputs/Commands described above.
+
+## Mandatory Rules
+
+1. **Read context first.** Every AI agent MUST read `Docs/BriefContext.md` at the start of every session before making any changes.
+2. **Keep BriefContext current.** After any structural change (new files, deleted files, API changes, architecture changes), update `Docs/BriefContext.md` to reflect the current state.
+3. **BriefContext must never exceed 100 lines.** If an update would push it past 100 lines, condense existing content first. Do not create a second context file.
+4. **No emojis.** Do not use emoji characters anywhere in the codebase (source files, docs, comments, UI text). Use plain text alternatives.

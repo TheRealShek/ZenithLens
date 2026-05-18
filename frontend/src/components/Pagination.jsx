@@ -21,11 +21,11 @@ export default function Pagination({ page, total, limit, onPageChange }) {
         disabled={page <= 1}
         onClick={() => onPageChange(page - 1)}
       >
-        ‹ Prev
+        &lt; Prev
       </button>
       {pages.map((p, i) =>
         p === '...' ? (
-          <span key={`ellipsis-${i}`} className="page-ellipsis">…</span>
+          <span key={`ellipsis-${i}`} className="page-ellipsis">...</span>
         ) : (
           <button
             key={p}
@@ -41,7 +41,7 @@ export default function Pagination({ page, total, limit, onPageChange }) {
         disabled={page >= totalPages}
         onClick={() => onPageChange(page + 1)}
       >
-        Next ›
+        Next &gt;
       </button>
     </div>
   );

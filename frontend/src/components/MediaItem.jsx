@@ -16,7 +16,7 @@ export default function MediaItem({ item, isFavorite, onClick }) {
           <span className="placeholder-name">{item.name}</span>
           <a className="dl-link" href={fileURL} download onClick={e => e.stopPropagation()}>Download</a>
         </div>
-        {isFavorite && <span className="fav-indicator">❤️</span>}
+        {isFavorite && <span className="fav-indicator">*</span>}
       </div>
     );
   }
@@ -34,8 +34,8 @@ export default function MediaItem({ item, isFavorite, onClick }) {
           onError={() => setImgError(true)}
         />
       )}
-      {item.type === 'video' && !imgError && <span className="video-badge">▶</span>}
-      {isFavorite && <span className="fav-indicator">❤️</span>}
+      {item.type === 'video' && !imgError && <span className="video-badge">Play</span>}
+      {isFavorite && <span className="fav-indicator">*</span>}
     </div>
   );
 }

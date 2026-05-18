@@ -17,10 +17,10 @@ export default function Lightbox({ item, onClose, onPrev, onNext, hasPrev, hasNe
   return (
     <div className="lightbox" onClick={onClose}>
       <div className="lightbox-content" onClick={e => e.stopPropagation()}>
-        <button className="lb-close" onClick={onClose}>✕</button>
+        <button className="lb-close" onClick={onClose}>X</button>
 
-        {hasPrev && <button className="lb-nav lb-nav-left" onClick={onPrev}>‹</button>}
-        {hasNext && <button className="lb-nav lb-nav-right" onClick={onNext}>›</button>}
+        {hasPrev && <button className="lb-nav lb-nav-left" onClick={onPrev}>&lt;</button>}
+        {hasNext && <button className="lb-nav lb-nav-right" onClick={onNext}>&gt;</button>}
 
         {item.type === 'image' ? (
           <img className="lb-media" src={fileURL} alt={item.name} />
@@ -41,9 +41,9 @@ export default function Lightbox({ item, onClose, onPrev, onNext, hasPrev, hasNe
             onClick={onToggleFavorite}
             title="Toggle favorite (F)"
           >
-            {isFavorite ? '❤️' : '♡'}
+            {isFavorite ? 'Unfav' : 'Fav'}
           </button>
-          <button className="lb-dl-btn" onClick={handleDownload} title="Download (D)">⬇</button>
+          <button className="lb-dl-btn" onClick={handleDownload} title="Download (D)">DL</button>
         </div>
       </div>
     </div>
